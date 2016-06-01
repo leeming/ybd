@@ -230,7 +230,8 @@ def get_cache(defs, this):
     ''' Check if a cached artifact exists for the hashed version of this. '''
 
     if cache_key(defs, this) is False:
-        return False
+        raise Exception("cache_key not found")
+        #return False
 
     cachedir = os.path.join(app.config['artifacts'], cache_key(defs, this))
     if os.path.isdir(cachedir):
@@ -242,6 +243,8 @@ def get_cache(defs, this):
             tmpdir = tempfile.mkdtemp()
             if call(['tar', 'xf', artifact, '--directory', tmpdir]):
                 app.log(this, 'Problem unpacking', artifact)
+
+                raise Exception("tar issue return false")
                 return False
             try:
                 shutil.move(tmpdir, unpackdir)
@@ -252,6 +255,7 @@ def get_cache(defs, this):
                 pass
         return os.path.join(cachedir, cache_key(defs, this))
 
+    raise Exception("Fall back exception, cachedir '%s' doesn't exist"%cachedir)
     return False
 
 
