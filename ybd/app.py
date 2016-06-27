@@ -33,6 +33,7 @@ try:
     riemann_available = True
 except ImportError:
     riemann_available = False
+from logger import l,log
 
 
 config = {}
@@ -126,6 +127,7 @@ def warning_handler(message, category, filename, lineno, file=None, line=None):
 
 
 def setup(args):
+    l(args,'error')
     config['start-time'] = datetime.datetime.now()
     config['program'] = os.path.basename(args[0])
     config['my-version'] = get_version(os.path.dirname(__file__))
@@ -220,6 +222,8 @@ def setup(args):
     config['pid'] = os.getpid()
     config['counter'] = Counter()
     log('SETUP', 'Max-jobs is set to', config['max-jobs'])
+
+    l(config,"debug")
 
 
 def load_configs(config_files):

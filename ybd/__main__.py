@@ -30,7 +30,8 @@ from release_note import do_release_note
 import sandbox
 import sandboxlib
 import yaml
-
+import logging
+import logger
 
 def write_cache_key():
     with open(config['result-file'], 'w') as f:
@@ -39,8 +40,6 @@ def write_cache_key():
         log('COUNT', '%s has %s %s' % (config['target'], config[kind], kind))
     log('RESULT', 'Cache-key for target is at', config['result-file'])
 
-
-print('')   #TODO, comment why this is here/if it is needed
 if not os.path.exists('./VERSION'):
     #Make sure we are in the definitions directory
     if os.path.basename(os.getcwd()) != 'definitions':
@@ -49,6 +48,10 @@ if not os.path.exists('./VERSION'):
         else:
             if os.path.isdir(os.path.join(os.getcwd(), '..', 'definitions')):
                 os.chdir(os.path.join(os.getcwd(), '..', 'definitions'))
+#else assume version 1? TODO 
+
+#Setup dev logging
+logger._setup_logging(logging.DEBUG)
 
 setup(sys.argv)
 cleanup(config['tmp'])
