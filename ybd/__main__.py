@@ -40,8 +40,9 @@ def write_cache_key():
     log('RESULT', 'Cache-key for target is at', config['result-file'])
 
 
-print('')
+print('')   #TODO, comment why this is here/if it is needed
 if not os.path.exists('./VERSION'):
+    #Make sure we are in the definitions directory
     if os.path.basename(os.getcwd()) != 'definitions':
         if os.path.isdir(os.path.join(os.getcwd(), 'definitions')):
             os.chdir(os.path.join(os.getcwd(), 'definitions'))
@@ -52,6 +53,7 @@ if not os.path.exists('./VERSION'):
 setup(sys.argv)
 cleanup(config['tmp'])
 
+#TODO basic comment to what this block does
 with timer('TOTAL'):
     tmp_lock = open(os.path.join(config['tmp'], 'lock'), 'r')
     fcntl.flock(tmp_lock, fcntl.LOCK_SH | fcntl.LOCK_NB)

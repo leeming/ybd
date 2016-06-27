@@ -239,13 +239,13 @@ def get_cache(dn):
 
     cachedir = os.path.join(app.config['artifacts'], cache_key(dn))
     if os.path.isdir(cachedir):
-        call(['touch', cachedir])
+        call(['touch', cachedir])   #FIXME not windows safe?
         artifact = os.path.join(cachedir, cache_key(dn))
         unpackdir = artifact + '.unpacked'
         if not os.path.isdir(unpackdir):
             tempfile.tempdir = app.config['tmp']
             tmpdir = tempfile.mkdtemp()
-            if call(['tar', 'xf', artifact, '--directory', tmpdir]):
+            if call(['tar', 'xf', artifact, '--directory', tmpdir]):    #FIXME not windows safe?
                 app.log(dn, 'Problem unpacking', artifact)
                 return False
             try:
@@ -302,7 +302,7 @@ def cull(artifact_dir):
     def clear(deleted, artifact_dir):
         artifacts = utils.sorted_ls(artifact_dir)
         for artifact in artifacts:
-            stat = os.statvfs(artifact_dir)
+            stat = os.statvfs(artifact_dir) #TODO statvfs deprecated in python3
             free = stat.f_frsize * stat.f_bavail / 1000000000
             if free >= app.config.get('min-gigabytes', 10):
                 app.log('SETUP', '%sGB is enough free space' % free)
@@ -347,7 +347,7 @@ def check(artifact):
 
         return(open(checkfile).read())
     except:
-        return('================================')
+        return('================================')  #FIXME surely we throw an error here?
 
 
 def md5(filename):
@@ -360,4 +360,4 @@ def md5(filename):
                 hash.update(chunk)
         return hash.hexdigest()
     except:
-        return None
+        return None #FIXME throw exception instead

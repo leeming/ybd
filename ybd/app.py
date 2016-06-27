@@ -158,6 +158,7 @@ def setup(args):
         os.path.join(os.path.dirname(__file__), '..', 'ybd.conf'),
         os.path.join(os.path.dirname(__file__), 'config', 'ybd.conf')])
 
+    #TODO This looks like dead code? If url is not set, set it then remove it???
     if config.get('kbas-url', 'http://foo.bar/') == 'http://foo.bar/':
         config.pop('kbas-url')
     if config.get('kbas-url'):
