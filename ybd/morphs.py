@@ -18,7 +18,7 @@ import yaml
 import os
 from app import chdir, config, log
 from defaults import Defaults
-
+from logger import l
 
 class Morphs(object):
 
@@ -30,6 +30,10 @@ class Morphs(object):
         self.parse_files(directory)
 
     def parse_files(self, directory):
+        '''
+        Search a given directory for all .def or .morph files
+        Once found try to parse/demorph them.
+        '''
         with chdir(directory):
             for dirname, dirnames, filenames in os.walk('.'):
                 filenames.sort()
@@ -52,13 +56,16 @@ class Morphs(object):
         the dict keyed as 'path'.
 
         '''
+        l("_load(path=%s)"%path,"d",tag="MORPH-LOAD")
         try:
             with open(path) as f:
                 text = f.read()
             contents = yaml.safe_load(text)
         except yaml.YAMLError, exc:
+            l("YAMLError: Morph definition file could not be loaded : %s"%path,"e",tag="MORPH-LOAD")
             log('DEFINITIONS', 'Could not parse %s' % path, exc, exit=True)
-        except:
+        except Exception as e:
+            l("Unexpected error when loading morphfile: %s\n%s"%(path,e),"e",tag="MORPH-LOAD")
             log('DEFINITIONS', 'WARNING: Unexpected error loading', path)
             return None
 

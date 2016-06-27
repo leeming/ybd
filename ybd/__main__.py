@@ -32,6 +32,7 @@ import sandboxlib
 import yaml
 import logging
 import logger
+from logger import l
 
 def write_cache_key():
     with open(config['result-file'], 'w') as f:
@@ -56,13 +57,18 @@ logger._setup_logging(logging.DEBUG)
 setup(sys.argv)
 cleanup(config['tmp'])
 
-#TODO basic comment to what this block does
+# Time the total running of YBD
 with timer('TOTAL'):
+    # Create lock file
     tmp_lock = open(os.path.join(config['tmp'], 'lock'), 'r')
     fcntl.flock(tmp_lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
+    l("Creating lock file at %s"%os.path.join(config['tmp'], 'lock'),"d")
 
+    # Get target definitions
     target = os.path.join(config['defdir'], config['target'])
     log('TARGET', 'Target is %s' % target, config['arch'])
+    l("Reading root definitions for %s"%target,"i")
+    
     with timer('DEFINITIONS', 'parsing %s' % config['def-version']):
         app.defs = Pots()
         if 'release-note' in config:
@@ -74,7 +80,7 @@ with timer('TOTAL'):
 
     if config.get('mode', 'normal') == 'parse-only':
         os._exit(0)
-
+    os._exit(0)
     with timer('CACHE-KEYS', 'cache-key calculations'):
         cache.cache_key(target)
 

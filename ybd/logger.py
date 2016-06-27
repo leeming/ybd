@@ -13,7 +13,7 @@ except:
     fh = logging.FileHandler('ybd.log')
     fh.setLevel(_log_default_lvl)
     
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',"%Y-%m-%d %H:%M:%S")
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
     fh.setFormatter(formatter)
 
     _logger.addHandler(fh)
@@ -34,7 +34,6 @@ def l(msg, level=logging.DEBUG, tag='',  *kargs, **kwargs):
         
         if level in [logging.DEBUG,'d','debug']:
             _logger.debug(msg, *kargs, **kwargs)
-            print msg
         elif level in [logging.INFO, 'i', 'info']:      
             _logger.info(msg, *kargs, **kwargs)
         elif level in [logging.WARN, 'w', 'warn']:      
@@ -44,7 +43,6 @@ def l(msg, level=logging.DEBUG, tag='',  *kargs, **kwargs):
         else:
             raise Exception("Unexpected log level of :%d"%level)
     else:
-        print "Logging not en"
         return 
 def log(*kargs, **kwargs):
     global _logger, _log_default_tag
@@ -71,6 +69,6 @@ def _setup_logging(log_level=logging.DEBUG, filename='ybd.log'):
 
     _logger.addHandler(fh)
     _log_init=True
-    l("logger.init()",'d',tag="INIT")
+    l("logger.init()",'d',tag="INIT2")
     
 l("logger.init()",'d',tag="INIT")

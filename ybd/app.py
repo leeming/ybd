@@ -33,7 +33,7 @@ try:
     riemann_available = True
 except ImportError:
     riemann_available = False
-from logger import l,log
+from logger import l
 
 
 config = {}
@@ -127,7 +127,8 @@ def warning_handler(message, category, filename, lineno, file=None, line=None):
 
 
 def setup(args):
-    l(args,'error')
+    l("")
+    l(args,'d')
     config['start-time'] = datetime.datetime.now()
     config['program'] = os.path.basename(args[0])
     config['my-version'] = get_version(os.path.dirname(__file__))
@@ -285,6 +286,8 @@ def chdir(dirname=None):
 def timer(dn, message=''):
     starttime = datetime.datetime.now()
     log(dn, 'Starting ' + message)
+    l("Timer(dn=%s,message=%s) starting"%(dn,message),'d')
+    
     if type(dn) is dict:
         dn['start-time'] = starttime
     try:
@@ -295,6 +298,8 @@ def timer(dn, message=''):
     time_elapsed = elapsed(starttime)
     log(dn, 'Elapsed time' + text, time_elapsed)
     log_riemann(dn, 'Timer', text, time_elapsed)
+    
+    l("Timer() ending : text=%s, time_elapsed=%s"%(text,time_elapsed),'d')
 
 
 def log_riemann(dn, service, text, time_elapsed):

@@ -19,7 +19,7 @@ import yaml
 from app import config, log
 from defaults import Defaults
 from morphs import Morphs
-
+from logger import l
 
 # copied from http://stackoverflow.com/questions/21016220
 class ExplicitDumper(yaml.SafeDumper):
@@ -39,6 +39,7 @@ class Pots(object):
         self._set_trees()
         self.defaults = Defaults()
         self._save_pots('./definitions.yml')
+        l(str(self),'d',tag="POTS")
 
     def get(self, dn):
         ''' Return a definition from the dictionary.
@@ -67,6 +68,7 @@ class Pots(object):
 
     def _set_trees(self):
         '''Use the tree values from .trees file, to save time'''
+        l("_set_trees()",tag="POTS")
         try:
             with open(os.path.join(config['artifacts'], '.trees')) as f:
                 text = f.read()
@@ -74,13 +76,17 @@ class Pots(object):
             count = 0
             for path in self._data:
                 dn = self._data[path]
+                l(dn,tag="TREE-DN")
                 if dn.get('ref') and self._trees.get(path):
+                    l(self._trees.get(path),tag="TREE-DN-PATH")
                     if dn['ref'] == self._trees.get(path)[0]:
                         dn['tree'] = self._trees.get(path)[1]
                         count += 1
             log('DEFINITIONS', 'Re-used %s entries from .trees file' % count)
+            l('Re-used %s entries from .trees file' % count,"i",tag="POTS")
         except:
             log('DEFINITIONS', 'WARNING: problem with .trees file')
+            l("Could not load cached .trees file","w",tag="POTS")
             pass
 
     def save_trees(self):
