@@ -32,10 +32,16 @@ import re
 
 def cache_key(dn):
     if dn is None:
-        app.log(dn, 'No definition found for', dn, exit=True)
+        #app.log(dn, 'No definition found for', dn, exit=True)
+        raise LookupError("None passed as definition in cache_key()."
+                  "Definitions include:\n%app.defs"%("\n\t".join([st for k in app.defs.keys()]),))
 
     if type(dn) is not dict:
         dn = app.defs.get(dn)
+
+    if dn is None:
+        raise LookupError("Unable to get cache key for definition=%s in cache_key()."
+                          "Definitions include:\n%app.defs"%(dn,"\n\t".join([st for k in app.defs.keys()])))
 
     if dn.get('cache') == 'calculating':
         app.log(dn, 'Recursion loop for', dn, exit=True)

@@ -31,10 +31,27 @@ from splitting import write_metadata, install_split_artifacts
 
 
 def compose(dn):
-    '''Work through defs tree, building and assembling until target exists'''
+    '''
+    Work through defs tree, building and assembling until target exists
+    
+    Args:
+        dn: 
+    
+    Returns:
+        bool   :
+        None   :
+        void   :
+        String :
+    
+    TODO/FIXME:
+        - So many return types
+        - Search of files show all usages assume void return
+    '''
+
+
 
     if type(dn) is not dict:
-        dn = app.defs.get(dn)
+        dn = app.defs.get(dn)   #Set the key in definitions dict and return None
 
     # if we can't calculate cache key, we can't create this component
     if cache_key(dn) is False:
@@ -58,6 +75,7 @@ def compose(dn):
 
     # we only work with user-specified arch
     if 'arch' in dn and dn['arch'] != config['arch']:
+        raise Exception("Architecture miss-match for definition=%s : arch=%s != config-arch=%s"%(dn,dn['arch'], config['arch']))
         return None
 
     # Create composite components (strata, systems, clusters)

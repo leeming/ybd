@@ -105,7 +105,7 @@ def log(dn, message='', data='', verbose=False, exit=False):
     print(entry),
     sys.stdout.flush()
 
-    if exit:
+    if exit:    #TODO this isn't the best way to exit the program. This is a force kill (no cleanup)
         print('\n\n')
         os._exit(1)
 

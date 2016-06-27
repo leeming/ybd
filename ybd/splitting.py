@@ -33,19 +33,22 @@ def install_split_artifacts(dn):
 
     '''
     all_splits = []
-    for i in app.defs.defaults.get_split_rules('stratum'):
-        all_splits += [i['artifact']]
-    for index, content in enumerate(dn['contents']):
-        for stratum, artifacts in content.items():
-            if artifacts == []:
-                if config.get('default-splits', []) != []:
-                    for split in config.get('default-splits'):
-                        artifacts += [app.defs.get(stratum)['name'] + split]
-                else:
-                    for split in all_splits:
-                        artifacts += [os.path.basename(stratum) + split]
-
-        dn['contents'][index] = {stratum: artifacts}
+    try:
+        for i in app.defs.defaults.get_split_rules('stratum'):
+            all_splits += [i['artifact']]
+        for index, content in enumerate(dn['contents']):
+            for stratum, artifacts in content.items():
+                if artifacts == []:
+                    if config.get('default-splits', []) != []:
+                        for split in config.get('default-splits'):
+                            artifacts += [app.defs.get(stratum)['name'] + split]
+                    else:
+                        for split in all_splits:
+                            artifacts += [os.path.basename(stratum) + split]
+    
+            dn['contents'][index] = {stratum: artifacts}
+    except Exception as e:
+        raise Exception("Error while splitting apps.defs.defaults for dn=%s"%dn,e)
 
     for content in dn['contents']:
         key = content.keys()[0]
