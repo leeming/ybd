@@ -4,7 +4,7 @@ try:
     _log_init
 except:
     _log_init=False
-    _log_default_lvl=logging.INFO
+    _log_default_lvl=logging.DEBUG
     _log_default_tag="YBD"
 
     _logger = logging.getLogger(__name__)
