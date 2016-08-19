@@ -32,6 +32,7 @@ import sandbox
 import sandboxlib
 import yaml
 
+from logger import logger
 
 def write_cache_key():
     with open(config['result-file'], 'w') as f:
@@ -54,21 +55,34 @@ if not os.path.exists('./VERSION'):
 setup(sys.argv, original_cwd)
 cleanup(config['tmp'])
 
+logger.debug(config)
+
 with timer('TOTAL'):
+    logger.info("Configuring the build")
+    
+    #Create lock file for YBD
+    logger.debug("Creating lock file at {}"
+                 .format(os.path.join(config['tmp'], 'lock')))
     tmp_lock = open(os.path.join(config['tmp'], 'lock'), 'r')
     fcntl.flock(tmp_lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
 
+    #Parse root definitions file
     target = os.path.join(config['defdir'], config['target'])
     log('TARGET', 'Target is %s' % target, config['arch'])
+    logger.info("Target is {}:{}".format(target, config['arch']))
     with timer('DEFINITIONS', 'parsing %s' % config['def-version']):
         app.defs = Pots()
 
+    #
     target = app.defs.get(config['target'])
     if config.get('mode', 'normal') == 'parse-only':
+        logger.debug("Only running pipeline")
         Pipeline(target)
         os._exit(0)
 
+    #Calculate cache keys
     with timer('CACHE-KEYS', 'cache-key calculations'):
+        logger.debug("Calculating cache keys")
         cache.cache_key(target)
 
     if 'release-note' in config:
@@ -85,15 +99,20 @@ with timer('TOTAL'):
 
     cache.cull(config['artifacts'])
 
+    #Set up the sandbox for building
     sandbox.executor = sandboxlib.executor_for_platform()
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
+    logger.debug('Sandbox using {}'.format(sandbox.executor))
     if sandboxlib.chroot == sandbox.executor:
         log(config['target'], 'WARNING: using chroot is less safe ' +
             'than using linux-user-chroot')
 
+    #Spawn multiple instances of YBD for parallel builds
     if 'instances' in config:
         spawn()
 
+    #Start to build definitions
+    logger.info("Build starting...")
     while True:
         try:
             compose(target)
@@ -102,6 +121,7 @@ with timer('TOTAL'):
             log(target, 'Interrupted by user')
             os._exit(1)
         except RetryException:
+            logger.warn("Retry compose exception")
             pass
         except:
             import traceback

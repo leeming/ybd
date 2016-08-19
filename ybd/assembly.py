@@ -33,18 +33,22 @@ from splitting import write_metadata, install_split_artifacts
 def compose(dn):
     '''Work through defs tree, building and assembling until target exists'''
 
+    logger.info("Composing : {}".format(dn))
     if type(dn) is not dict:
         dn = app.defs.get(dn)
+    logger.debug(dn)
 
     # if we can't calculate cache key, we can't create this component
     if cache_key(dn) is False:
         if 'tried' not in dn:
             log(dn, 'No cache_key, so skipping compose')
+            logger.warn("No cache_key for {}, so skipping compose".format(dn))
             dn['tried'] = True
         return False
 
     # if dn is already cached, we're done
     if get_cache(dn):
+        logger.debug("{} is already cached so skipping".format(dn))
         return cache_key(dn)
 
     log(dn, "Composing", dn['name'], verbose=True)
@@ -70,6 +74,7 @@ def compose(dn):
         compose(system['path'])
 
     with sandbox.setup(dn):
+        logger.debug("Attempting sandbox install of {}".format(dn))
         install_contents(dn)
         build(dn)     # bring in 'build-depends', and run make
 
@@ -82,6 +87,7 @@ def install_contents(dn, contents=None):
     if contents is None:
         contents = dn.get('contents', [])
 
+    logger.debug("Installing contents {}".format(contents))
     log(dn, 'Installing contents\n', contents, verbose=True)
 
     shuffle(contents)
@@ -90,6 +96,8 @@ def install_contents(dn, contents=None):
         if os.path.exists(os.path.join(dn['sandbox'],
                                        'baserock', item['name'] + '.meta')):
             # content has already been installed
+            logger.debug("Already installed {}".format(os.path.join(dn['sandbox'],
+                    'baserock', item['name'] + '.meta')))
             log(dn, 'Already installed', item['name'], verbose=True)
             continue
 
@@ -99,6 +107,7 @@ def install_contents(dn, contents=None):
         if item.get('build-mode', 'staging') != 'bootstrap':
             if not get_cache(item):
                 compose(item)
+            logger.debug("Installing into sandbox {}...".format(item))
             sandbox.install(dn, item)
 
     if config.get('log-verbose'):
@@ -140,8 +149,10 @@ def build(dn):
     if get_cache(dn):
         return
 
+    #Wait for lock to become free
     with claim(dn):
         if dn.get('kind', 'chunk') == 'chunk':
+            logger.debug("Installing chunk dependencies {}".format(dn))
             install_dependencies(dn)
         with timer(dn, 'build of %s' % dn['cache']):
             run_build(dn)
@@ -162,6 +173,7 @@ def run_build(dn):
     '''
 
     if config.get('mode', 'normal') == 'no-build':
+        logger.debug("Skilling artifact build : {}".format(dn))
         log(dn, 'SKIPPING BUILD: artifact will be empty')
         return
 
@@ -194,6 +206,7 @@ def run_build(dn):
 
 
 def shuffle(contents):
+    logger.debug("Shuffling contents {}".format(contents))
     if config.get('instances', 1) > 1:
         random.seed(datetime.datetime.now())
         random.shuffle(contents)
