@@ -19,6 +19,7 @@ import os
 from app import chdir, config, log
 from defaults import Defaults
 
+from logger import logger
 
 class Morphs(object):
 
@@ -31,6 +32,9 @@ class Morphs(object):
         self.parse_files(directory)
 
     def parse_files(self, directory):
+        '''Searches a directory for definitions files'''
+        
+        logger.debug("Morph Parsing {}".format(directory))
         with chdir(directory):
             for dirname, dirnames, filenames in os.walk('.'):
                 filenames.sort()
@@ -39,6 +43,7 @@ class Morphs(object):
                     dirnames.remove('.git')
                 for filename in filenames:
                     if filename.endswith(('.def', '.morph')):
+                        logger.debug("morph file found : {}".format(filename))
                         path = os.path.join(dirname, filename)
                         data = self._load(path)
                         if data is not None:

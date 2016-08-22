@@ -56,6 +56,7 @@ class Pots(object):
 
         if type(dn) is str:
             if self._data.get(dn):
+                logger.debug(" * Cached")
                 return self._data.get(dn)
             
             logger.error("Unable to find definition for {}".format(dn))
@@ -110,4 +111,4 @@ class Pots(object):
                                          self._data[name].get('cache')]
         with open(os.path.join(config['artifacts'], '.trees'), 'w') as f:
             f.write(yaml.safe_dump(self._trees, default_flow_style=False))
-            logger.log("Tree saved to file {}".format(os.path.join(config['artifacts'], '.trees')))
+            logger.info("Tree saved to file {}".format(os.path.join(config['artifacts'], '.trees')))

@@ -72,6 +72,9 @@ with timer('TOTAL'):
     logger.info("Target is {}:{}".format(target, config['arch']))
     with timer('DEFINITIONS', 'parsing %s' % config['def-version']):
         app.defs = Pots()
+    logger.info("=======")
+    logger.info("Done Fetching definitions tree")
+    logger.debug(app.defs._data)
 
     #
     target = app.defs.get(config['target'])
