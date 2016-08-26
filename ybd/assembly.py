@@ -29,6 +29,7 @@ import sandbox
 import datetime
 from splitting import write_metadata, install_split_artifacts
 
+from logger import logger
 
 def compose(dn):
     '''Work through defs tree, building and assembling until target exists'''

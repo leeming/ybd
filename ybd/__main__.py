@@ -17,6 +17,9 @@
 
 '''A module to build a definition.'''
 
+import sys
+sys.path.insert(0, "/home/andrewleeming/baserock/sandboxlib")
+
 import os
 import sys
 import fcntl
@@ -32,7 +35,7 @@ import sandbox
 import sandboxlib
 import yaml
 
-from logger import logger
+from logger import logger, setup_logger
 
 def write_cache_key():
     with open(config['result-file'], 'w') as f:
@@ -74,7 +77,7 @@ with timer('TOTAL'):
         app.defs = Pots()
     logger.info("=======")
     logger.info("Done Fetching definitions tree")
-    logger.debug(app.defs._data)
+    #logger.debug(app.defs._data)
 
     #
     target = app.defs.get(config['target'])
@@ -87,6 +90,7 @@ with timer('TOTAL'):
     with timer('CACHE-KEYS', 'cache-key calculations'):
         logger.debug("Calculating cache keys")
         cache.cache_key(target)
+    logger.info("All cache-keys calculated")
 
     if 'release-note' in config:
         do_release_note(config['release-note'])
@@ -104,6 +108,7 @@ with timer('TOTAL'):
 
     #Set up the sandbox for building
     sandbox.executor = sandboxlib.executor_for_platform()
+
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
     logger.debug('Sandbox using {}'.format(sandbox.executor))
     if sandboxlib.chroot == sandbox.executor:

@@ -34,6 +34,7 @@ try:
 except ImportError:
     riemann_available = False
 
+from logger import logger
 
 config = {}
 defs = {}
@@ -125,7 +126,14 @@ def warning_handler(message, category, filename, lineno, file=None, line=None):
     return 'WARNING: %s\n' % (message)
 
 
+
 def setup(args, original_cwd=""):
+    '''
+    Sets up the configuration dictionary
+    
+    Defaults are picked up from ybd/config/{ybd,defaults}.conf 
+    '''
+
     os.environ['LANG'] = 'en_US.UTF-8'
     config['start-time'] = datetime.datetime.now()
     config['program'] = os.path.basename(args[0])
@@ -136,6 +144,9 @@ def setup(args, original_cwd=""):
         sys.exit(1)
 
     log('SETUP', 'Running %s in' % args[0], os.getcwd())
+    logger.info("YBD path {}".format(args[0]))
+    logger.info("Definitions path {}".format(os.path.join(os.getcwd(),args[1])))
+    
     config['target'] = os.path.basename(os.path.splitext(args[1])[0])
     config['arch'] = args[2]
     config['sandboxes'] = []
@@ -227,8 +238,12 @@ def setup(args, original_cwd=""):
 
 
 def load_configs(config_files):
+    logger.debug("Attempting to load configs : {}".format(config_files))
+    
     for config_file in reversed(config_files):
         if os.path.exists(config_file):
+            logger.debug("Config {} exists".format(config_file))
+            
             with open(config_file) as f:
                 text = f.read()
                 if yaml.safe_load(text) is None:

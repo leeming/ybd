@@ -14,6 +14,8 @@
 #
 # =*= License: GPL-2 =*=
 
+import sys
+sys.path.insert(0, "/home/andrewleeming/baserock/sandboxlib")
 
 import sandboxlib
 import contextlib

@@ -29,18 +29,25 @@ import tempfile
 import yaml
 import re
 
+from logger import logger
+
 
 def cache_key(dn):
+    
     if dn is None:
         app.log(dn, 'No definition found for', dn, exit=True)
 
     if type(dn) is not dict:
         dn = app.defs.get(dn)
+        
+    
+    logger.debug("Calculating cache key for {}".format(dn['name']))
 
     if dn.get('cache') == 'calculating':
         app.log(dn, 'Recursion loop for', dn, exit=True)
 
     if dn.get('cache'):
+        logger.debug("cache_key already calculated")
         return dn['cache']
 
     if dn.get('arch', app.config['arch']) != app.config['arch']:
@@ -60,6 +67,8 @@ def cache_key(dn):
         factors = json.dumps(factors, sort_keys=True).encode('utf-8')
         key = hashlib.sha256(factors).hexdigest()
 
+    logger.debug("Key={}".format(key))
+    #logger.debug("Factors={}".format(list(factors.keys())))
     dn['cache'] = dn['name'] + "." + key
 
     app.config['total'] += 1
@@ -68,6 +77,7 @@ def cache_key(dn):
         x = ' '
         app.config['tasks'] += 1
 
+    # Do some basic statistics on chunk kind
     if dn.get('kind', 'chunk') == 'chunk':
         app.config['chunks'] += 1
     if dn.get('kind', 'chunk') == 'stratum':
@@ -87,6 +97,8 @@ def cache_key(dn):
 def hash_factors(dn):
     hash_factors = {'arch': app.config['arch']}
 
+    # Recursively fetch cache keys of dependencies
+    ## TODO check opimisation of this
     for factor in dn.get('build-depends', []):
         hash_factors[factor] = cache_key(factor)
 
@@ -138,6 +150,7 @@ def cache(dn):
     if get_cache(dn):
         app.log(dn, "Bah! I could have cached", cache_key(dn))
         return
+    
     tempfile.tempdir = app.config['tmp']
     tmpdir = tempfile.mkdtemp()
     cachefile = os.path.join(tmpdir, cache_key(dn))
@@ -209,6 +222,7 @@ def unpack(dn, tmpfile):
 
 
 def upload(dn):
+    logger.info("Uploading")
     cachefile = get_cache(dn)
     url = app.config['kbas-url'] + 'upload'
     params = {"filename": dn['cache'],
@@ -304,6 +318,7 @@ def get_remote(dn):
 def cull(artifact_dir):
     tempfile.tempdir = app.config['tmp']
     deleted = 0
+    logger.debug("Culling dir {}".format(artifact_dir))
 
     def clear(deleted, artifact_dir):
         artifacts = utils.sorted_ls(artifact_dir)

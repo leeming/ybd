@@ -16,25 +16,31 @@
 import logging
 
 
-#Set up loggers
-logger = logging.getLogger(__name__)
+def setup_logger():
+    #Set up loggers
+    logger = logging.getLogger(__name__)
+    
+    ##Define logging to file behaviour
+    # All levels are logged to a single debug.log file
+    fh = logging.FileHandler('ybd-debug.log',mode='w')
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s',
+                                  "%Y-%m-%d %H:%M:%S")
+    fh.setFormatter(formatter)
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+    
+    ##Define logging out to stdout
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.WARN)
+    formatter = logging.Formatter('[%(name)s] %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    
+    #Set minimum level for the global setting.
+    logger.setLevel(logging.DEBUG)
+    
+    return logger
 
-##Define logging to file behaviour
-# All levels are logged to a single debug.log file
-fh = logging.FileHandler('ybd-debug.log',mode='w')
-formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s',
-                              "%Y-%m-%d %H:%M:%S")
-fh.setFormatter(formatter)
-fh.setLevel(logging.DEBUG)
-logger.addHandler(fh)
+logger=setup_logger()
 
-##Define logging out to stdout
-ch = logging.StreamHandler()
-ch.setLevel(logging.WARN)
-formatter = logging.Formatter('[%(name)s] %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-#Set minimum level for the global setting.
-logger.setLevel(logging.DEBUG)
 logger.debug("Logger init")
