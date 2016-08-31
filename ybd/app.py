@@ -35,6 +35,7 @@ except ImportError:
     riemann_available = False
 
 from logger import logger
+import logging
 
 config = {}
 defs = {}
@@ -77,6 +78,9 @@ class Counter(object):
 def lockfile(dn):
     return os.path.join(config['tmp'], cache_key(dn) + '.lock')
 
+def log_wrapper(definition_tag, message, level=logging.DEBUG):
+    
+    logger.log(level, "[{}] {}".format(definition_tag,message))
 
 def log(dn, message='', data='', verbose=False, exit=False):
     ''' Print a timestamped log. '''
@@ -86,6 +90,7 @@ def log(dn, message='', data='', verbose=False, exit=False):
         message = 'ERROR: ' + message.replace('WARNING: ', '')
 
     if verbose is True and config.get('log-verbose', False) is False:
+        log_wrapper(dn, message)
         return
 
     name = dn['name'] if type(dn) is dict else dn
@@ -95,6 +100,7 @@ def log(dn, message='', data='', verbose=False, exit=False):
         timestamp = timestamp[:9] + elapsed(config['start-time']) + ' '
     if config.get('log-timings', 'omit') == 'omit':
         timestamp = ''
+        
     progress = ''
     if config.get('counter'):
         count = config['counter'].get()
@@ -103,6 +109,7 @@ def log(dn, message='', data='', verbose=False, exit=False):
     if config.get('instances'):
         entry = str(config.get('fork', 0)) + ' ' + entry
 
+    log_wrapper(dn, "@YBD@ {}".format(entry))
     print(entry),
     sys.stdout.flush()
 

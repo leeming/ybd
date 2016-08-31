@@ -53,6 +53,8 @@ def install_split_artifacts(dn):
 
 
 def move_required_files(dn, stratum, artifacts):
+    logger.debug("move_required_files(dn={}, stratum={}, artifacts={})".format(dn,stratum,artifacts))
+    
     log(dn, 'Installing %s artifacts' % stratum['name'], artifacts)
     stratum_metadata = get_metadata(stratum)
     split_stratum_metadata = {}
