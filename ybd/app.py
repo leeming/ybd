@@ -82,6 +82,7 @@ def log_wrapper(definition_tag, message, level=logging.DEBUG):
     
     logger.log(level, "[{}] {}".format(definition_tag,message))
 
+
 def log(dn, message='', data='', verbose=False, exit=False):
     ''' Print a timestamped log. '''
 
@@ -89,18 +90,21 @@ def log(dn, message='', data='', verbose=False, exit=False):
         print('\n\n')
         message = 'ERROR: ' + message.replace('WARNING: ', '')
 
+    # Do nothing if verbose logging is not turned on
     if verbose is True and config.get('log-verbose', False) is False:
         log_wrapper(dn, message)
         return
 
+    #Set the name-tag part of the log message
     name = dn['name'] if type(dn) is dict else dn
 
+    #Log timestamp can be : absolute timestamp / elapsed time / none
     timestamp = datetime.datetime.now().strftime('%y-%m-%d %H:%M:%S ')
     if config.get('log-timings') == 'elapsed':
         timestamp = timestamp[:9] + elapsed(config['start-time']) + ' '
     if config.get('log-timings', 'omit') == 'omit':
         timestamp = ''
-        
+
     progress = ''
     if config.get('counter'):
         count = config['counter'].get()

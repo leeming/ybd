@@ -28,35 +28,43 @@ class Morphs(object):
         self._data = {}
         self.defaults = Defaults()
         self.fields = self.defaults.build_steps + self.defaults.fields
+        #TOFIX global reference 
         config['cpu'] = self.defaults.cpus.get(config['arch'], config['arch'])
         self.parse_files(directory)
 
     def parse_files(self, directory):
         '''Searches a directory for definitions files'''
         
-        logger.debug("Morph Parsing {}".format(directory))
+        logger.debug("Morph Parsing directory '{}'".format(directory))
         with chdir(directory):
             for dirname, dirnames, filenames in os.walk('.'):
                 filenames.sort()
                 dirnames.sort()
                 if '.git' in dirnames:
                     dirnames.remove('.git')
+                    
                 for filename in filenames:
                     if filename.endswith(('.def', '.morph')):
-                        logger.debug("morph file found : {}".format(filename))
+                        logger.debug("Morph file found : {}".format(filename))
+                        
                         path = os.path.join(dirname, filename)
                         data = self._load(path)
+                        logger.debug(" - Data is : {}".format(data))
+                        
                         if data is not None:
                             data['path'] = self._demorph(path[2:])
                             self._fix_keys(data)
                             self._tidy_and_insert_recursively(data)
+                        else:
+                            logger.warn("No parsable data in {}".format(path))
+
         for x in self._data:
             dn = self._data[x]
             for field in dn:
                 if field not in self.fields:
                     log(dn, 'Invalid field "%s" in' % field, dn['path'],
                         exit=True)
-
+                    
     def _load(self, path):
         '''Load a single definition file as a dict.
 
@@ -151,8 +159,11 @@ class Morphs(object):
 
         exit = (config.get('check-definitions') == 'exit')
 
+        #If we are dealing with a morph path
         if dn.get('morph'):
             if not os.path.isfile(dn.get('morph')):
+                logger.warn("Morph reference '{}' points to a missing file"
+                            .format(dn['morph']))
                 log('DEFINITION', 'WARNING: missing', dn['morph'], exit=exit)
             dn['path'] = self._demorph(dn.pop('morph'))
 
@@ -225,6 +236,8 @@ class Morphs(object):
         return new_def['path']
 
     def _demorph(self, path):
+        '''Removes '.morph' part of the string in path(?)'''
+        
         if config.get('artifact-version', 0) not in range(0, 4):
             if path.endswith('.morph'):
                 path = path.rpartition('.morph')[0]
