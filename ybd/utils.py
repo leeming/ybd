@@ -26,6 +26,8 @@ import calendar
 
 import app
 
+from logger import logger
+
 # The magic number for timestamps: 2011-11-11 11:11:11
 default_magic_timestamp = calendar.timegm([2011, 11, 11, 11, 11, 11])
 
@@ -252,10 +254,15 @@ def _copy_directories(srcdir, destdir, target):
 
 
 def _process_list(srcdir, destdir, filelist, actionfunc):
-
+    logger.debug("Inside _process_list, the function of doom")
+    logger.debug("File list")
+    logger.debug(filelist)
+    
     for path in sorted(filelist):
         srcpath = os.path.join(srcdir, path).encode('UTF-8')
         destpath = os.path.join(destdir, path).encode('UTF-8')
+
+        logger.debug("{} -> {}".format(srcpath,destpath))
 
         # The destination directory may not have been created separately
         _copy_directories(srcdir, destdir, path)
@@ -264,11 +271,16 @@ def _process_list(srcdir, destdir, filelist, actionfunc):
             file_stat = os.lstat(srcpath)
             mode = file_stat.st_mode
         except UnicodeEncodeError as ue:
+            logger.error(ue)
             app.log("UnicodeErr",
                     "Couldn't get lstat info for '%s'." % srcpath)
             raise ue
+        except OSError as ose:
+            logger.error(ose)
+            raise ose
 
         if stat.S_ISDIR(mode):
+            logger.debug("is_dir")
             # Ensure directory exists in destination, then recurse.
             if not os.path.lexists(destpath):
                 os.makedirs(destpath)
@@ -279,6 +291,7 @@ def _process_list(srcdir, destdir, filelist, actionfunc):
             shutil.copystat(srcpath, destpath)
 
         elif stat.S_ISLNK(mode):
+            logger.debug("is_ln")
             # Copy the symlink.
             if os.path.lexists(destpath):
                 os.remove(destpath)
@@ -289,10 +302,15 @@ def _process_list(srcdir, destdir, filelist, actionfunc):
             os.symlink(target, destpath)
 
         elif stat.S_ISREG(mode):
+            logger.debug("is_file")
             # Process the file.
             if os.path.lexists(destpath):
                 os.remove(destpath)
-            actionfunc(srcpath, destpath)
+            try:
+                actionfunc(srcpath, destpath)
+            except OSError as ose:
+                logger.error("Error copying file {} -> {}".format(srcpath,destpath))
+                raise ose
 
         elif stat.S_ISCHR(mode) or stat.S_ISBLK(mode):
             # Block or character device. Put contents of st_dev in a mknod.

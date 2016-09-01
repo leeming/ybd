@@ -34,7 +34,7 @@ from logger import logger
 def compose(dn):
     '''Work through defs tree, building and assembling until target exists'''
 
-    logger.info("Composing : {}".format(dn))
+    logger.info("Composing : {}".format(dn['name']))
     if type(dn) is not dict:
         dn = app.defs.get(dn)
     logger.debug(dn)
@@ -108,7 +108,7 @@ def install_contents(dn, contents=None):
         if item.get('build-mode', 'staging') != 'bootstrap':
             if not get_cache(item):
                 compose(item)
-            logger.debug("Installing into sandbox {}...".format(item))
+            logger.debug("Installing into sandbox ...")
             sandbox.install(dn, item)
 
     if config.get('log-verbose'):

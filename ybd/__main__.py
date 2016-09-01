@@ -36,6 +36,7 @@ import sandboxlib
 import yaml
 
 from logger import logger, setup_logger
+import pprint
 
 def write_cache_key():
     with open(config['result-file'], 'w') as f:
@@ -58,7 +59,7 @@ if not os.path.exists('./VERSION'):
 setup(sys.argv, original_cwd)
 cleanup(config['tmp'])
 
-logger.debug(config)
+logger.debug(pprint.pformat(config))
 
 with timer('TOTAL'):
     logger.info("Configuring the build")

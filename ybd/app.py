@@ -36,6 +36,7 @@ except ImportError:
 
 from logger import logger
 import logging
+import pprint
 
 config = {}
 defs = {}
@@ -78,16 +79,28 @@ class Counter(object):
 def lockfile(dn):
     return os.path.join(config['tmp'], cache_key(dn) + '.lock')
 
-def log_wrapper(definition_tag, message, level=logging.DEBUG):
+def log_wrapper(definition_tag=None, message="", level=logging.DEBUG, pp_dict=True):
     
-    logger.log(level, "[{}] {}".format(definition_tag,message))
+    if isinstance(message, dict) and pp_dict:
+        message=pprint.pformat(message)
+        
+    if definition_tag is not None:
+        logger.log(level, "[{}] {}".format(definition_tag,message.rstrip()))
+    else:
+        logger.log(level, "{}".format(message.rstrip()))
+        
 
 
 def log(dn, message='', data='', verbose=False, exit=False):
     ''' Print a timestamped log. '''
+    log_level=logging.INFO
+    if verbose:
+        log_level=logging.DEBUG
+
 
     if exit:
         print('\n\n')
+        log_level=logging.ERROR
         message = 'ERROR: ' + message.replace('WARNING: ', '')
 
     # Do nothing if verbose logging is not turned on
@@ -113,7 +126,7 @@ def log(dn, message='', data='', verbose=False, exit=False):
     if config.get('instances'):
         entry = str(config.get('fork', 0)) + ' ' + entry
 
-    log_wrapper(dn, "@YBD@ {}".format(entry))
+    log_wrapper(name, "{}".format(entry))
     print(entry),
     sys.stdout.flush()
 

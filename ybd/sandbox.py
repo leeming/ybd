@@ -31,6 +31,7 @@ import cache
 import utils
 from repos import get_repo_url
 
+from logger import logger
 
 # This must be set to a sandboxlib backend before the run_sandboxed() function
 # can be used.
@@ -240,7 +241,9 @@ def run_extension(dn, deployment, step, method):
             cmd_tmp.close()
             os.chmod(cmd_tmp.name, 0o700)
 
+            logger.debug("command:{}".format(command))
             if call(command):
+                logger.error("Extension '{}':{} failed".format(step,cmd_bin))
                 app.log(dn, 'ERROR: %s extension failed:' % step, cmd_bin)
                 raise SystemExit
         finally:

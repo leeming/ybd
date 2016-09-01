@@ -22,6 +22,8 @@ import re
 import yaml
 from utils import copy_file_list
 
+from logger import logger
+import pprint
 
 def install_split_artifacts(dn):
     '''Create the .meta files for a split system
@@ -53,10 +55,11 @@ def install_split_artifacts(dn):
 
 
 def move_required_files(dn, stratum, artifacts):
-    logger.debug("move_required_files(dn={}, stratum={}, artifacts={})".format(dn,stratum,artifacts))
+    logger.debug("move_required_files(dn=..., stratum={}, artifacts={})".format(pprint.pformat(stratum),artifacts))
     
     log(dn, 'Installing %s artifacts' % stratum['name'], artifacts)
     stratum_metadata = get_metadata(stratum)
+    
     split_stratum_metadata = {}
     split_stratum_metadata['products'] = []
     to_keep = []
@@ -70,26 +73,35 @@ def move_required_files(dn, stratum, artifacts):
     log(dn, 'Splitting components:', to_keep, verbose=True)
 
     baserockpath = os.path.join(dn['install'], 'baserock')
+    logger.debug("baserockpath: {}".format(baserockpath))
+    
     if not os.path.isdir(baserockpath):
         os.mkdir(baserockpath)
     split_stratum_metafile = os.path.join(baserockpath,
                                           stratum['name'] + '.meta')
     with open(split_stratum_metafile, "w") as f:
+        logger.debug("Saving contents {} to {}".format(pprint.pformat(split_stratum_metadata),split_stratum_metafile))
         yaml.safe_dump(split_stratum_metadata, f, default_flow_style=False)
 
     for path in stratum['contents']:
+        logger.debug("{} contents : {}".format(stratum['name'], path))
+        
         chunk = app.defs.get(path)
+        logger.debug(pprint.pformat(chunk))
         if chunk.get('build-mode', 'staging') == 'bootstrap':
             continue
 
         try:
             metafile = path_to_metafile(chunk)
+            logger.debug("metafile = {}".format(metafile))
             with open(metafile, "r") as f:
                 filelist = []
                 metadata = yaml.safe_load(f)
                 split_metadata = {'ref': metadata.get('ref'),
                                   'repo': metadata.get('repo'),
                                   'products': []}
+                logger.debug(split_metadata)
+                
                 if config.get('artifact-version', 0) not in range(0, 1):
                     metadata['cache'] = dn.get('cache')
 
@@ -101,15 +113,21 @@ def move_required_files(dn, stratum, artifacts):
 
                         split_metadata['products'].append(product)
 
+                logger.debug("split products : {}".format(pprint.pformat(split_metadata['products'])))
+            
                 if split_metadata['products'] != []:
                     split_metafile = os.path.join(baserockpath,
                                                   os.path.basename(metafile))
+                    logger.info("Splitting metadata products into :{}".format(split_metafile))
+                    logger.debug(pprint.pformat(split_metadata))
+                    
                     with open(split_metafile, "w") as f:
                         yaml.safe_dump(split_metadata, f,
                                        default_flow_style=False)
-                    log(dn, 'Splits split_metadata is\n', split_metadata,
-                        verbose=True)
+                    #log(dn, 'Splits split_metadata is\n', split_metadata,
+                    #    verbose=True)
                     log(dn, 'Splits filelist is\n', filelist, verbose=True)
+                    logger.debug("pre copy_file_list({},{},{})".format(dn['sandbox'], dn['install'], filelist))
                     copy_file_list(dn['sandbox'], dn['install'], filelist)
         except:
             import traceback
@@ -151,9 +169,10 @@ def get_metadata(dn):
             metadata = yaml.safe_load(f)
         log(dn, 'Loaded metadata', dn['path'], verbose=True)
         return metadata
-    except:
+    except Exception as e:
         log(dn, 'WARNING: problem loading metadata', dn)
-        return None
+        #return None
+        raise TypeError("WARNING: problem loading metadata",e)
 
 
 def path_to_metafile(dn):

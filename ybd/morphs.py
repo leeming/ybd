@@ -20,6 +20,7 @@ from app import chdir, config, log
 from defaults import Defaults
 
 from logger import logger
+import pprint
 
 class Morphs(object):
 
@@ -49,7 +50,7 @@ class Morphs(object):
                         
                         path = os.path.join(dirname, filename)
                         data = self._load(path)
-                        logger.debug(" - Data is : {}".format(data))
+                        logger.debug(" - Data is : {}".format(pprint.pformat(data)))
                         
                         if data is not None:
                             data['path'] = self._demorph(path[2:])
