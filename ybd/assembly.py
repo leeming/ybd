@@ -34,10 +34,10 @@ from logger import logger
 def compose(dn):
     '''Work through defs tree, building and assembling until target exists'''
 
-    logger.info("Composing : {}".format(dn['name']))
     if type(dn) is not dict:
         dn = app.defs.get(dn)
-    logger.debug(dn)
+    
+    logger.info("Composing : {}".format(dn['name']))
 
     # if we can't calculate cache key, we can't create this component
     if cache_key(dn) is False:
