@@ -31,7 +31,7 @@ def setup_logger():
     
     ##Define logging out to stdout
     ch = logging.StreamHandler()
-    ch.setLevel(logging.WARN)
+    ch.setLevel(logging.INFO)
     formatter = logging.Formatter('[%(name)s] %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
@@ -44,3 +44,13 @@ def setup_logger():
 logger=setup_logger()
 
 logger.debug("Logger init")
+
+verbose = logging.getLogger('verbose')
+fh = logging.FileHandler('ybd-verbose.log',mode='w')
+formatter = logging.Formatter("[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s")
+fh.setFormatter(formatter)
+fh.setLevel(logging.DEBUG)
+verbose.addHandler(fh)
+verbose.setLevel(logging.DEBUG)
+
+verbose.info("Verbose init")

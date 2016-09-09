@@ -35,7 +35,7 @@ import sandbox
 import sandboxlib
 import yaml
 
-from logger import logger, setup_logger
+from logger import logger, verbose
 import pprint
 
 def write_cache_key():
@@ -43,42 +43,55 @@ def write_cache_key():
         f.write(target['cache'] + '\n')
     for kind in ['systems', 'strata', 'chunks']:
         log('COUNT', '%s has %s %s' % (config['target'], config[kind], kind))
+        logger.info('[COUNT] {} has {} {}'.format(config['target'], config[kind], kind))
+        
     log('RESULT', 'Cache-key for target is at', config['result-file'])
+    logger.info("[RESULT] Cache-key for target is at {}".format(config['result-file']))
 
+def chdir_definitions():
+    '''
+    YBD expects to be run from the 'definitions' directory. This function makes
+    sure that it is by doing a simple search.
+    '''
+    
+    
+    if not os.path.exists('./VERSION'):
+        if os.path.basename(os.getcwd()) != 'definitions':
+            if os.path.isdir(os.path.join(os.getcwd(), 'definitions')):
+                logger.debug("Not in definitions, moving to {}"
+                             .format(os.path.join(os.getcwd(), 'definitions')))
+                os.chdir(os.path.join(os.getcwd(), 'definitions'))
+            else:
+                if os.path.isdir(os.path.join(os.getcwd(), '..', 'definitions')):
+                    logger.debug("Not in definitions, moving to {}"
+                             .format(os.path.join(os.getcwd(), '../definitions')))
+                    os.chdir(os.path.join(os.getcwd(), '..', 'definitions'))
 
-print('')
+#Do some basic tool setup
 original_cwd = os.getcwd()
-if not os.path.exists('./VERSION'):
-    if os.path.basename(os.getcwd()) != 'definitions':
-        if os.path.isdir(os.path.join(os.getcwd(), 'definitions')):
-            os.chdir(os.path.join(os.getcwd(), 'definitions'))
-        else:
-            if os.path.isdir(os.path.join(os.getcwd(), '..', 'definitions')):
-                os.chdir(os.path.join(os.getcwd(), '..', 'definitions'))
-
+chdir_definitions()
 setup(sys.argv, original_cwd)
 cleanup(config['tmp'])
 
+#Dump out the loaded config
 logger.debug(pprint.pformat(config))
 
 with timer('TOTAL'):
     logger.info("Configuring the build")
     
     #Create lock file for YBD
-    logger.debug("Creating lock file at {}"
+    verbose.info("Creating lock file at {}"
                  .format(os.path.join(config['tmp'], 'lock')))
     tmp_lock = open(os.path.join(config['tmp'], 'lock'), 'r')
     fcntl.flock(tmp_lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
 
     #Parse root definitions file
     target = os.path.join(config['defdir'], config['target'])
-    log('TARGET', 'Target is %s' % target, config['arch'])
-    logger.info("Target is {}:{}".format(target, config['arch']))
+    logger.info("[TARGET] Target is {}:{}".format(target, config['arch']))
     with timer('DEFINITIONS', 'parsing %s' % config['def-version']):
         app.defs = Pots()
-    logger.info("=======")
-    logger.info("Done Fetching definitions tree")
-    #logger.debug(app.defs._data)
+    
+    logger.info("Fetched definitions tree")
 
     #
     target = app.defs.get(config['target'])
@@ -89,15 +102,16 @@ with timer('TOTAL'):
 
     #Calculate cache keys
     with timer('CACHE-KEYS', 'cache-key calculations'):
-        logger.debug("Calculating cache keys")
+        logger.info("Calculating cache keys")
         cache.cache_key(target)
-    logger.info("All cache-keys calculated")
+    logger.debug("All cache-keys calculated")
 
     if 'release-note' in config:
         do_release_note(config['release-note'])
 
     if config['total'] == 0 or (config['total'] == 1 and
                                 target.get('kind') == 'cluster'):
+        log.error("[ARCH] No definitions for".format(config['arch']))
         log('ARCH', 'No definitions for', config['arch'], exit=True)
 
     app.defs.save_trees()
@@ -111,7 +125,7 @@ with timer('TOTAL'):
     sandbox.executor = sandboxlib.executor_for_platform()
 
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
-    logger.debug('Sandbox using {}'.format(sandbox.executor))
+    logger.info('[{}] Sandbox using {}'.format(config['target'],sandbox.executor))
     if sandboxlib.chroot == sandbox.executor:
         log(config['target'], 'WARNING: using chroot is less safe ' +
             'than using linux-user-chroot')
@@ -128,14 +142,17 @@ with timer('TOTAL'):
             break
         except KeyboardInterrupt:
             log(target, 'Interrupted by user')
+            logger.error("{} Interrupted by user".format(target))
             os._exit(1)
         except RetryException:
-            logger.warn("Retry compose exception")
+            logger.warn("{} Retry compose exception".format(target))
             pass
         except:
             import traceback
             traceback.print_exc()
             log(target, 'Exiting: uncaught exception')
+            logger.error("{} Exiting: uncaught exception".format(target))
+            
             os._exit(1)
 
     if config.get('reproduce'):

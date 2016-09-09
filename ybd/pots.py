@@ -20,7 +20,7 @@ from app import config, log
 from defaults import Defaults
 from morphs import Morphs
 
-from logger import logger
+from logger import logger,verbose
 
 # copied from http://stackoverflow.com/questions/21016220
 class ExplicitDumper(yaml.SafeDumper):
@@ -43,7 +43,7 @@ class Pots(object):
         self.defaults = Defaults()
         self._save_pots('./definitions.yml')
         
-        logger.debug("Init Pots({})".format(directory))
+        verbose.debug("Init Pots({})".format(directory))
 
     def get(self, dn):
         ''' Return a definition from the dictionary.
@@ -52,11 +52,11 @@ class Pots(object):
         If `dn` is a dict, return the definition with key equal to the 'path'
         value in the given dict. '''
 
-        logger.debug("Pots.get({})".format(dn))
+        verbose.debug("Pots.get({})".format(dn))
 
         if type(dn) is str:
             if self._data.get(dn):
-                logger.debug(" * Cached")
+                verbose.debug(" * Cached")
                 return self._data.get(dn)
             
             logger.error("Unable to find definition for {}".format(dn))
@@ -69,6 +69,7 @@ class Pots(object):
         with open(filename, 'w') as f:
             f.write(yaml.dump(self._data, default_flow_style=False,
                               Dumper=ExplicitDumper))
+        logger.info("[RESULT] Saved yaml definitions at {}".format(filename))
         log('RESULT', 'Saved yaml definitions at', filename)
 
     def _load_pots(self, filename):
@@ -93,7 +94,9 @@ class Pots(object):
                         dn['tree'] = self._trees.get(path)[1]
                         count += 1
             log('DEFINITIONS', 'Re-used %s entries from .trees file' % count)
-        except:
+        except Exception as e:
+            #FIXME what type of exception exactly? More information to user
+            logger.warn("[DEFINITIONS] problem with .trees file",e)
             log('DEFINITIONS', 'WARNING: problem with .trees file')
             pass
 

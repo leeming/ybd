@@ -46,6 +46,8 @@ class RetryException(Exception):
     def __init__(self, dn):
         if config.get('last-retry-dn') != dn:
             log(dn, 'Already assembling, so wait/retry', verbose=True)
+            logger.debug("Already assembling, so wait/retry")
+            
         if config.get('last-retry-time'):
             wait = datetime.datetime.now() - config.get('last-retry-time')
             if wait.seconds < 1:
@@ -53,6 +55,7 @@ class RetryException(Exception):
                     call(['flock', '--shared', '--timeout',
                           config.get('timeout', '60'), str(l.fileno())])
                 log(dn, 'Finished wait loop', verbose=True)
+                logger.debug("Finished wait loop")
         config['last-retry-time'] = datetime.datetime.now()
         config['last-retry-dn'] = dn
         for dirname in config['sandboxes']:
@@ -89,10 +92,9 @@ def log_wrapper(definition_tag=None, message="", level=logging.DEBUG, pp_dict=Tr
     else:
         logger.log(level, "{}".format(message.rstrip()))
         
-
-
 def log(dn, message='', data='', verbose=False, exit=False):
     ''' Print a timestamped log. '''
+    print"~~DEPRECATED~~"
     log_level=logging.INFO
     if verbose:
         log_level=logging.DEBUG
@@ -155,7 +157,10 @@ def setup(args, original_cwd=""):
     '''
     Sets up the configuration dictionary
     
-    Defaults are picked up from ybd/config/{ybd,defaults}.conf 
+    Defaults are picked up from ybd/config/{ybd,defaults}.conf
+    
+    @param args [] - A copy of argv from the commandline
+    @param original_cwd (String) - working directory program was originally run from
     '''
 
     os.environ['LANG'] = 'en_US.UTF-8'
@@ -163,13 +168,16 @@ def setup(args, original_cwd=""):
     config['program'] = os.path.basename(args[0])
     config['my-version'] = get_version(os.path.dirname(__file__))
     log('SETUP', '%s version is' % config['program'], config['my-version'])
+    logger.info("[SETUP] {} version {}".format(config['program'], config['my-version']))
+    
     if len(args) != 3:
+        #Print out usage help
         sys.stdout.write("\nUsage: %s DEFINITION_FILE ARCH\n\n" % sys.argv[0])
         sys.exit(1)
 
     log('SETUP', 'Running %s in' % args[0], os.getcwd())
-    logger.info("YBD path {}".format(args[0]))
-    logger.info("Definitions path {}".format(os.path.join(os.getcwd(),args[1])))
+    logger.info("[SETUP] Running {} in {}".format(args[0], os.getcwd()))
+    logger.debug("Definitions path {}".format(os.path.join(os.getcwd(),args[1])))
     
     config['target'] = os.path.basename(os.path.splitext(args[1])[0])
     config['arch'] = args[2]
@@ -195,7 +203,10 @@ def setup(args, original_cwd=""):
         os.path.join(os.path.dirname(__file__), '..', 'ybd.conf'),
         os.path.join(os.path.dirname(__file__), 'config', 'ybd.conf')])
 
+    #Check that user has correct permissions
+    #FIXME should not require root, this was added as a quick fix
     if not os.geteuid() == 0 and config.get('mode') == 'normal':
+        logger.error("[SETUP] {} needs root permissions".format(sys.argv[0]))
         log('SETUP', '%s needs root permissions' % sys.argv[0], exit=True)
 
     if config.get('kbas-url', 'http://foo.bar/') == 'http://foo.bar/':
@@ -234,10 +245,12 @@ def setup(args, original_cwd=""):
             os.makedirs(config[directory])
         except OSError:
             if not os.path.isdir(config[directory]):
+                logger.error("[SETUP] Cannot find or create".format(config[directory]))
                 log('SETUP', 'Cannot find or create', config[directory],
                     exit=True)
 
         log('SETUP', '%s is directory for' % config[directory], directory)
+        logger.info("[SETUP] {} is directory for {}".format(config[directory], directory))
 
     # git replace means we can't trust that just the sha1 of a branch
     # is enough to say what it contains, so we turn it off by setting
@@ -259,6 +272,7 @@ def setup(args, original_cwd=""):
     config['pid'] = os.getpid()
     config['counter'] = Counter()
     log('SETUP', 'Max-jobs is set to', config['max-jobs'])
+    logger.info("[SETUP] Max-jobs is set to {}".format(config['max-jobs']))
 
 
 def load_configs(config_files):
@@ -273,21 +287,23 @@ def load_configs(config_files):
                 if yaml.safe_load(text) is None:
                     return
             log('SETUP', 'Setting config from %s:' % config_file)
+            logger.info("[SETUP] Setting config from {}".format(config_file))
 
             for key, value in yaml.safe_load(text).items():
                 config[key.replace('_', '-')] = value
                 msg = value if 'PASSWORD' not in key.upper() else '(hidden)'
                 print '   %s=%s' % (key.replace('_', '-'), msg)
-        print
 
 
 def cleanup(tmpdir):
     if not config.get('cleanup', True):
         log('SETUP', 'WARNING: no cleanup for', tmpdir)
+        logger.warn("[SETUP] No cleanup for {}".format(tmpdir))
         return
 
     try:
         log('SETUP', 'Trying cleanup for', tmpdir)
+        logger.info("[SETUP] Trying cleanup for {}".format(tmpdir))
         with open(os.path.join(tmpdir, 'lock'), 'w') as tmp_lock:
             fcntl.flock(tmp_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             to_delete = os.listdir(tmpdir)
@@ -307,6 +323,7 @@ def remove_dir(tmpdir):
             shutil.rmtree(tmpdir)
         except:
             log('SETUP', 'WARNING: unable to remove', tmpdir)
+            logger.warn("[SETUP] unable to remove".format(tmpdir))
 
 
 @contextlib.contextmanager
