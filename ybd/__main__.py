@@ -85,7 +85,8 @@ with timer('TOTAL'):
 
     cache.cull(config['artifacts'])
 
-    sandbox.executor = sandboxlib.executor_for_platform()
+    sandbox.executor = sandboxlib.bubblewrap
+
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
     if sandboxlib.chroot == sandbox.executor:
         log(config['target'], 'WARNING: using chroot is less safe ' +
