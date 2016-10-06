@@ -122,7 +122,7 @@ with timer('TOTAL'):
     cache.cull(config['artifacts'])
 
     #Set up the sandbox for building
-    sandbox.executor = sandboxlib.executor_for_platform()
+    sandbox.executor = sandboxlib.get_executor("bubblewrap")
 
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
     logger.info('[{}] Sandbox using {}'.format(config['target'],sandbox.executor))

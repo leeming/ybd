@@ -205,9 +205,9 @@ def setup(args, original_cwd=""):
 
     #Check that user has correct permissions
     #FIXME should not require root, this was added as a quick fix
-    if not os.geteuid() == 0 and config.get('mode') == 'normal':
-        logger.error("[SETUP] {} needs root permissions".format(sys.argv[0]))
-        log('SETUP', '%s needs root permissions' % sys.argv[0], exit=True)
+    #if not os.geteuid() == 0 and config.get('mode') == 'normal':
+    #    logger.error("[SETUP] {} needs root permissions".format(sys.argv[0]))
+    #    log('SETUP', '%s needs root permissions' % sys.argv[0], exit=True)
 
     if config.get('kbas-url', 'http://foo.bar/') == 'http://foo.bar/':
         config.pop('kbas-url')
