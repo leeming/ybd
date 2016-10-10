@@ -15,7 +15,6 @@
 # =*= License: GPL-2 =*=
 
 
-import sandboxlib
 import contextlib
 import os
 import pipes
@@ -28,6 +27,12 @@ import app
 import cache
 import utils
 from repos import get_repo_url
+
+import sys
+# FIXME sandboxlib-bubblewrap not in pypi yet. Checkout locally and set path
+SANDBOX_LIB_PATH = "/home/andrewleeming/baserock/sandboxlib"
+sys.path.insert(0, SANDBOX_LIB_PATH)
+import sandboxlib
 
 
 # This must be set to a sandboxlib backend before the run_sandboxed() function

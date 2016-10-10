@@ -194,8 +194,16 @@ def _process_tree(root, srcpath, destpath, actionfunc):
         # Block or character device. Put contents of st_dev in a mknod.
         if os.path.lexists(destpath):
             os.remove(destpath)
-        os.mknod(destpath, file_stat.st_mode, file_stat.st_rdev)
+        try:
+            os.mknod(destpath, file_stat.st_mode, file_stat.st_rdev)
+
+        except OSError as ose:
+            print("ERR: def _process_tree(root=%s, srcpath=%s, destpath=%s, actionfunc=%s)" %(root, srcpath, destpath, actionfunc))
+            print("os.mknod(destpath=%s, file_stat.st_mode=%s, file_stat.st_rdev=%s)" % (destpath, file_stat.st_mode, file_stat.st_rdev))
+            raise ose
+
         os.chmod(destpath, file_stat.st_mode)
+
 
     else:
         # Unsupported type.

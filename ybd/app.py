@@ -34,6 +34,10 @@ try:
 except ImportError:
     riemann_available = False
 
+import sys
+# FIXME sandboxlib-bubblewrap not in pypi yet. Checkout locally and set path
+SANDBOX_LIB_PATH = "/home/andrewleeming/baserock/sandboxlib"
+sys.path.insert(0, SANDBOX_LIB_PATH)
 import sandboxlib
 import sandbox
 

@@ -29,6 +29,11 @@ from concourse import Pipeline
 import cache
 from release_note import do_release_note
 import sandbox
+
+import sys
+# FIXME sandboxlib-bubblewrap not in pypi yet. Checkout locally and set path
+SANDBOX_LIB_PATH = "/home/andrewleeming/baserock/sandboxlib"
+sys.path.insert(0, SANDBOX_LIB_PATH)
 import sandboxlib
 import yaml
 
@@ -85,7 +90,11 @@ with timer('TOTAL'):
 
     cache.cull(config['artifacts'])
 
-    sandbox.executor = sandboxlib.bubblewrap
+    try:
+        sandbox.executor = sandboxlib.bubblewrap
+    except Exception as e:
+        print(dir(sandboxlib))
+        raise e
 
     log(config['target'], 'Sandbox using %s' % sandbox.executor)
     if sandboxlib.chroot == sandbox.executor:
